@@ -6,7 +6,7 @@
 |    :---:     |     :---:     |     :---:       |
 |              |               |                 |
 | Htet Soe     |hsoe1@mail.sfsu.edu| HtpSoe      |
-|              |               |                 |
+| Jarvis Yu    |jyu23@mail.sfsu.edu| yujarvis08  |
 |              |               |                 |
 
 ##TO-DO
