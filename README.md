@@ -7,7 +7,7 @@
 |              |               |                 |
 | Htet Soe     |hsoe1@mail.sfsu.edu| HtpSoe      |
 | Jarvis Yu    |jyu23@mail.sfsu.edu| yujarvis08  |
-|              |               |                 |
+| Briana Sze   |bsze@mail.sfsu.edu | brianasze   |
 
 ##TO-DO
 
