@@ -12,9 +12,13 @@ import GameplayKit
 
 class GameViewController: UIViewController {
 
+    var counter = 0
+    @IBOutlet weak var testLabel: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        /*
         if let view = self.view as! SKView? {
             // Load the SKScene from 'GameScene.sks'
             if let scene = SKScene(fileNamed: "GameScene") {
@@ -30,6 +34,24 @@ class GameViewController: UIViewController {
             view.showsFPS = true
             view.showsNodeCount = true
         }
+         */
+    }
+    
+    @IBAction func attack(sender: UIButton) {
+        let test = "testing button";
+        print(test)
+        updateLabel()
+    }
+    
+    func updateLabel() {
+        counter += 1
+        print("counter: ", counter)
+        testLabel.text = String(counter)
+    }
+    
+    @IBAction func defend() {
+        let test = "block that shit";
+        print(test)
     }
 
     override var shouldAutorotate: Bool {
