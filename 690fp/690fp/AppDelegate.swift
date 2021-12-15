@@ -9,18 +9,18 @@
 import UIKit
 import Firebase
 
+// realistically we can get away with doing nothing actually important on this file :)
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Override point for customization after application
         
         FirebaseApp.configure()
         let db = Firestore.firestore()
-        
+        // note: remove this on final build
         // takes db table (called test)
         db.collection("test").getDocuments() { (querySnapshot, err) in
             if let err = err {
