@@ -27,36 +27,30 @@ struct Enemy {
 
 class GameViewController: UIViewController {
 
-    @IBOutlet weak var classImage: UIImageView!
-    @IBOutlet weak var testLabel: UILabel!
-    @IBOutlet weak var defendButton: UIButton!
-    @IBOutlet weak var pickWarrior: UIButton!
-    @IBOutlet weak var pickRogue: UIButton!
-    @IBOutlet weak var pickMage: UIButton!
+    
     
     var db: Firestore!
     var counter = 0;
     
     var newPlayer = Player()
     var newEnemy = Enemy()
+    var pickedClass: String = "default"
     
-    var storedData: [String:Any] = [:]
+    var storedData: [[String:Any]] = []
     var enemyData: [String:Any] = [:]
-    var hasObtainedData = false
     
     // note: this loads every single time a view loads. Gross!
+    
+    @IBAction func start(_ sender: Any) {
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // in case theres constant screen switching it doesnt spam the db for requests.
-        // it doesnt actually work at all though so this needs a fix asap.
-        if (self.hasObtainedData == false) {
-            self.hasObtainedData = true
-            let settings = FirestoreSettings()
-            Firestore.firestore().settings = settings
-            db = Firestore.firestore()
-            retrieveData()
-        }
+        let settings = FirestoreSettings()
+        Firestore.firestore().settings = settings
+        db = Firestore.firestore()
+        retrieveData()
         
         /*
         if let view = self.view as! SKView? {
@@ -79,19 +73,21 @@ class GameViewController: UIViewController {
     
     // retrieving data from db
     func retrieveData(){
-        var temp: [String: Any] = [:]
+        var temp: [[String: Any]] = []
         var temp2: [String: Any] = [:]
         db.collection("players").getDocuments() { (queryDoc, err) in
             if let err = err {
                 print("Error getting documents: \(err)")
             } else {
                 for document in queryDoc!.documents {
-                    temp.merge(document.data()) { (current, _) in current }
+                    temp.append(document.data())
                 }
             }
-            self.storedData.merge(temp) { (current, _) in current}
+            print(temp[0], separator: ", ")
+            print(temp[1], separator: ", ")
+            print(temp[2], separator: ", ")
+            self.storedData.append(contentsOf: temp)
             print("Got players: \(self.storedData)")
-            self.setPlayerData(input: self.storedData)
         }
         db.collection("enemies").getDocuments() { (queryDoc, err) in
             if let err = err {
@@ -103,34 +99,30 @@ class GameViewController: UIViewController {
             }
             self.enemyData.merge(temp2) { (current, _) in current}
             print("Got enemies: \(self.enemyData)")
-            self.setEnemyData(input: self.enemyData)
         }
     }
     
-    // setting data from db into struct
-    // note: if there's multiple character entries in the db (which there are rn), it'll loop through those characters.
-    // need to fix this so it only draws one specific thing (should be doable if we can get info from the view about which button was clicked which can be done with multiple functions)
     func setPlayerData(input: [String:Any]) {
         for (key, value) in input{
             switch key {
             case "name":
-                self.newPlayer.name = (value as? String)!
+                newPlayer.name = (value as? String ?? "default")
                 break
             case "health":
-                self.newPlayer.health = (value as? Int)!
+                newPlayer.health = (value as? Int ?? 1)
                 break
             case "damage":
-                self.newPlayer.damage = (value as? Int)!
+                newPlayer.damage = (value as? Int ?? 1)
                 break
             case "action":
-                self.newPlayer.action = (value as? String)!
+                newPlayer.action = (value as? String ?? "default")
                 break
             default:
                 print("error with setting data")
                 break
             }
         }
-        print("Set player data: \(self.newPlayer)")
+        print("Set player data: \(newPlayer)")
     }
     
     // have to limit this to 1 enemy per set because we're gonna be pulling from a pool of random enemies
@@ -138,87 +130,57 @@ class GameViewController: UIViewController {
         for (key, value) in input{
             switch key {
             case "name":
-                self.newEnemy.name = (value as? String)!
+                newEnemy.name = (value as? String ?? "default")
                 break
             case "health":
-                self.newEnemy.health = (value as? Int)!
+                newEnemy.health = (value as? Int ?? 1)
+                newEnemy.health += (Int(arc4random_uniform(3)))
                 break
             case "damage":
-                self.newEnemy.damage = (value as? Int)!
+                newEnemy.damage = (value as? Int ?? 1)
+                newEnemy.damage += (Int(arc4random_uniform(2)))
                 break
             case "action":
-                self.newEnemy.action = (value as? String)!
+                newEnemy.action = (value as? String ?? "default")
                 break
             default:
                 print("error with setting data")
                 break
             }
         }
-        print("Set enemy data: \(self.newEnemy)")
-    }
-    // for now it just acts as a print but later it'll be used to get specific classes from db.
-    @IBAction func pickClass(sender: UIButton) {
-        print("storedData: \(storedData)")
+        print("Set enemy data: \(newEnemy)")
     }
     
-    @IBAction func attack(sender: UIButton) {
-        print("testing button")
-        // tried to get sender info but seems rly weird
-        // print(sender)
-        updateLabel()
-    }
-    
-    // updates the chat thing on the bottom right
-    func updateLabel() {
-        counter += 1
-        print("counter: ", counter)
-        testLabel.text = String(counter)
-    }
-    
-    // action isn't dynamic yet so just universal defend for now
-    @IBAction func defend() {
-        flipDefend()
+    @IBSegueAction func startSegue(_ coder: NSCoder) -> GameViewController? {
+        print ("start test: \(storedData)")
         
-        // timer to flip defend back after 5 seconds
-        // can use this as a baseline to "wait" for an action
-        _ = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { timer in
-            self.flipDefend()
+        return GameViewController(coder: coder)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let destVC = segue.destination as? BattleViewController else {
+            return
         }
         
-        // note: delete this specific print on final build LOL
-        print("block that shit")
-    }
-
-    // could be useful for limiting an action
-    // for testing purposes, this also changes the class image and disables the defend button
-    func flipDefend() {
-        if (defendButton.isEnabled == true) {
-            defendButton.isEnabled = false
-            // could very easily have it swap to like \(newPlayer.name).png in order to switch the class image
-            classImage.image = UIImage(named: "mage.png")
-            print("defend button now false")
-        }
-        else if (defendButton.isEnabled == false) {
-            defendButton.isEnabled = true
-            classImage.image = UIImage(named: "knight.png")
-            print("defend button now true")
-        }
-        else {
-            // note: replace this with an error or something
-            print("how tf did this happen lmao")
-        }
+        destVC.activePlayer = newPlayer
+        destVC.activeEnemy = newEnemy
     }
     
-    // both need to dynamically update (see example in attack())
-    func displayPlayerHealth() {
-        
+    // lets the vc know which class was picked
+    @IBAction func pickWarrior(_ sender: Any) {
+        setPlayerData(input: storedData[2])
+        setEnemyData(input: enemyData)
     }
     
-    func displayEnemyHealth() {
-        
+    @IBAction func pickMage(_ sender: Any) {
+        setPlayerData(input: storedData[0])
+        setEnemyData(input: enemyData)
     }
     
-    
+    @IBAction func pickRogue(_ sender: Any) {
+        setPlayerData(input: storedData[1])
+        setEnemyData(input: enemyData)
+    }
     
     override var shouldAutorotate: Bool {
         return true
